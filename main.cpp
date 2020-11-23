@@ -9,45 +9,39 @@
 #include <set>
 #include <map>
 
-struct pInfo
-{
-	size_t id, cpuTime, ioTime, arrival;
-};
-
+using PID = const size_t;
 struct Process
 {
-	const size_t id, cpuTime, ioTime;
+	PID id;
+	const size_t cpuTime, ioTime, arrival;
 	const size_t ioStart = cpuTime / 2 + (cpuTime % 2 != 0);
 	size_t elapsedCpu = 0;
-	size_t elapsedIO = 0;
 	
-	enum State
-	{
-		Running, Ready, Blocked
-	} state{Ready};
-	
-	Process(size_t id, size_t cpuTime, size_t ioTime) : id(id), cpuTime(cpuTime), ioTime(ioTime)
+	Process(const PID id, const size_t cpuTime, const size_t ioTime, const size_t arrival) : id(id),
+	                                                                                            cpuTime(cpuTime),
+	                                                                                            ioTime(ioTime),
+	                                                                                            arrival(arrival)
 	{}
 };
 
-void fcfs(const std::vector<pInfo> &list)
+using TimeProcPair = std::pair<const size_t, Process *const>;
+
+void fcfs(std::vector<Process> &processes)
 {
-	std::vector<Process> processes;
-	processes.reserve(list.size());
-	std::priority_queue<std::pair<const size_t, Process *>> blockedList;
+	std::priority_queue<TimeProcPair> blockedList;
 	std::priority_queue<Process *> readyQueue;
+	std::map<PID, size_t> finishedList;
 	Process *running = nullptr;
 	
-	for (auto const &p : list)
+	for (auto &&p: processes)
 	{
-		processes.emplace_back(p.id, p.cpuTime, p.ioTime);
-		blockedList.push({p.arrival, &processes.back()});
+		blockedList.push({p.arrival, &p});
 	}
 	
-	for (int i = 0; i < 99; ++i)
+	for (int curCycle = 0; finishedList.size() < processes.size(); ++curCycle)
 	{
 		
-		while (blockedList.top().first == i)
+		while (blockedList.top().first == curCycle)
 		{
 			readyQueue.push(blockedList.top().second);
 			blockedList.pop();
@@ -55,12 +49,15 @@ void fcfs(const std::vector<pInfo> &list)
 		
 		if (running)
 		{
-			
 			running->elapsedCpu++;
 			
 			if (running->elapsedCpu == running->ioStart)
 			{
-				blockedList.push({i + running->ioTime, running});
+				blockedList.push({curCycle + running->ioTime, running});
+				running = nullptr;
+			} else if (running->elapsedCpu == running->cpuTime)
+			{
+				finishedList.emplace(running->id, curCycle);
 				running = nullptr;
 			}
 		}
@@ -85,8 +82,15 @@ int main(int argc, char *argv[])
 		size_t num;
 		input >> num;
 		
-		std::vector<pInfo> pList(num);
-		for (pInfo &p : pList) input >> p.id >> p.cpuTime >> p.ioTime >> p.arrival;
+		std::vector<Process> pList;
+		pList.reserve(num);
+		
+		for (int i = 0; i < num; ++i)
+		{
+			size_t id, cpuTime, ioTime, arrival;
+			input >> id >> cpuTime >> ioTime >> arrival;
+			pList.emplace_back(id, cpuTime, ioTime, arrival);
+		}
 		
 		fcfs(pList);
 	}

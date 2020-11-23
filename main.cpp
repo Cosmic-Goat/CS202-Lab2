@@ -2,6 +2,10 @@
 #include <vector>
 #include <deque>
 #include <memory>
+#include <fstream>
+#include <queue>
+#include <cmath>
+#include <list>
 
 struct pInfo
 {
@@ -11,6 +15,7 @@ struct pInfo
 struct Process
 {
 	const size_t id, cpuTime, ioTime;
+	const size_t ioStart = cpuTime / 2 + (cpuTime % 2 != 0);
 	size_t elapsedCpu = 0;
 	size_t elapsedIO = 0;
 	
@@ -23,21 +28,14 @@ struct Process
 	{}
 };
 
-struct Cycle
-{
-	std::vector<Process> processes;
-};
-
-void fcfs(const std::vector<pInfo>& list)
+void fcfs(const std::vector<pInfo> &list)
 {
 	
-	std::deque<std::unique_ptr<Process>> blockedQueue;
+	std::vector<std::unique_ptr<Process>> blockedList;
 	std::deque<std::unique_ptr<Process>> readyQueue;
 	auto running = std::unique_ptr<Process>{};
 	
-	size_t i = 0;
-	
-	for (i; i < 99; ++i)
+	for (int i = 0; i < 99; ++i)
 	{
 		for (pInfo p : list)
 		{
@@ -46,26 +44,61 @@ void fcfs(const std::vector<pInfo>& list)
 				readyQueue.emplace_back(std::make_unique<Process>(p.id, p.cpuTime, p.ioTime));
 			}
 		}
-	
-		if (!running)
+		
+		blockedList.erase(
+				std::remove_if(
+						blockedList.begin(),
+						blockedList.end(),
+						[](std::unique_ptr<Process> &p)
+						{
+							p->elapsedIO++;
+							readyQueue.push_back(std::move(p));
+							return p->elapsedIO == p->ioTime;
+						}
+				),
+				blockedList.end()
+		);
+		for (int j = 0; j < blockedList.size(); j++)
 		{
-			running = readyQueue.front();
+			blockedList[j]->elapsedIO++;
+			if (blockedList[j]->elapsedIO == blockedList[j]->ioTime)
+			{
+				readyQueue.push_back(std::move(blockedList[j]));
+				blockedList.erase(blockedList[j]);
+			}
 		}
 		
+		running->elapsedCpu++;
+		
+		if (running->elapsedCpu == running->ioStart)
+		{
+			blockedList.push_back(std::move(running));
+		}
+		
+		if (!running)
+		{
+			running = std::move(readyQueue.front());
+			readyQueue.pop_front();
+		}
 	}
 	
 	
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-	size_t num;
-	std::cin >> num;
+	std::ifstream input(argv[1]);
 	
-	std::vector<pInfo> pList(num);
-	for (pInfo &p : pList) std::cin >> p.id >> p.cpuTime >> p.ioTime >> p.arrival;
-	
-	fcfs(pList);
-	
+	if (input.is_open())
+	{
+		
+		size_t num;
+		input >> num;
+		
+		std::vector<pInfo> pList(num);
+		for (pInfo &p : pList) input >> p.id >> p.cpuTime >> p.ioTime >> p.arrival;
+		
+		fcfs(pList);
+	}
 	return 0;
 }

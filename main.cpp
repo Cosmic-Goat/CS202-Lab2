@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <deque>
 #include <memory>
 #include <fstream>
 #include <queue>
@@ -8,6 +7,10 @@
 #include <list>
 #include <set>
 #include <map>
+#include <string>
+#include <sstream>
+
+#include "magic_enum.hpp"
 
 using PID = const size_t;
 struct Process
@@ -17,6 +20,10 @@ struct Process
 	const size_t ioStart = cpuTime / 2 + (cpuTime % 2 != 0);
 	size_t elapsedCpu = 0;
 	
+	enum State {
+		running, ready, blocked, notArrived, finished
+	} state{notArrived};
+	
 	Process(const PID id, const size_t cpuTime, const size_t ioTime, const size_t arrival) : id(id),
 	                                                                                            cpuTime(cpuTime),
 	                                                                                            ioTime(ioTime),
@@ -24,11 +31,35 @@ struct Process
 	{}
 };
 
-using TimeProcPair = std::pair<const size_t, Process *const>;
+using pTimePair = std::pair<size_t, Process *>;
 
-void fcfs(std::vector<Process> &processes)
+void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, std::ostream &output)
 {
-	std::priority_queue<TimeProcPair> blockedList;
+	output << cycle << " ";
+	for (auto &&p : processes)
+	{
+		switch (p.state)
+		{
+			case Process::running:
+				output << p.id << ":running ";
+				break;
+			case Process::ready:
+				output << p.id << ":ready ";
+				break;
+			case Process::blocked:
+				output << p.id << ":blocked ";
+				break;
+			case Process::notArrived:
+			case Process::finished:
+				break;
+		}
+	}
+	output << "\n";
+}
+
+void scheduler(std::vector<Process> &processes, std::ostream &out)
+{
+	std::priority_queue<pTimePair, std::vector<pTimePair>, std::greater<>> blockedList;
 	std::priority_queue<Process *> readyQueue;
 	std::map<PID, size_t> finishedList;
 	Process *running = nullptr;
@@ -43,6 +74,7 @@ void fcfs(std::vector<Process> &processes)
 		
 		while (blockedList.top().first == curCycle)
 		{
+			blockedList.top().second->state = Process::ready;
 			readyQueue.push(blockedList.top().second);
 			blockedList.pop();
 		}
@@ -53,24 +85,34 @@ void fcfs(std::vector<Process> &processes)
 			
 			if (running->elapsedCpu == running->ioStart)
 			{
+				running->state = Process::blocked;
 				blockedList.push({curCycle + running->ioTime, running});
 				running = nullptr;
 			} else if (running->elapsedCpu == running->cpuTime)
 			{
+				running->state = Process::finished;
 				finishedList.emplace(running->id, curCycle);
 				running = nullptr;
 			}
 		}
 		
-		if (!running)
+		if (!running && !readyQueue.empty())
 		{
 			running = readyQueue.top();
 			readyQueue.pop();
+			running->state = Process::running;
 		}
+		
+		TimingSnapshot(curCycle, processes, out);
+		
+		
 	}
 	
 	
 }
+
+
+
 
 int main(int argc, char *argv[])
 {
@@ -78,7 +120,6 @@ int main(int argc, char *argv[])
 	
 	if (input.is_open())
 	{
-		
 		size_t num;
 		input >> num;
 		
@@ -92,7 +133,7 @@ int main(int argc, char *argv[])
 			pList.emplace_back(id, cpuTime, ioTime, arrival);
 		}
 		
-		fcfs(pList);
+		scheduler(pList, std::cout);
 	}
 	return 0;
 }

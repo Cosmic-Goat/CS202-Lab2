@@ -33,20 +33,19 @@ struct Process
 void fcfs(const std::vector<pInfo> &list)
 {
 	std::vector<Process> processes;
+	processes.reserve(list.size());
 	std::priority_queue<std::pair<const size_t, Process *>> blockedList;
 	std::priority_queue<Process *> readyQueue;
 	Process *running = nullptr;
 	
+	for (auto const &p : list)
+	{
+		processes.emplace_back(p.id, p.cpuTime, p.ioTime);
+		blockedList.push({p.arrival, &processes.back()});
+	}
+	
 	for (int i = 0; i < 99; ++i)
 	{
-		for (auto const &p : list)
-		{
-			if (p.arrival == i)
-			{
-				processes.emplace_back(p.id, p.cpuTime, p.ioTime);
-				readyQueue.push(&processes.back());
-			}
-		}
 		
 		while (blockedList.top().first == i)
 		{
@@ -54,12 +53,16 @@ void fcfs(const std::vector<pInfo> &list)
 			blockedList.pop();
 		}
 		
-		running->elapsedCpu++;
-		
-		if (running->elapsedCpu == running->ioStart)
+		if (running)
 		{
-			blockedList.push({i + running->ioTime, running});
-			running = nullptr;
+			
+			running->elapsedCpu++;
+			
+			if (running->elapsedCpu == running->ioStart)
+			{
+				blockedList.push({i + running->ioTime, running});
+				running = nullptr;
+			}
 		}
 		
 		if (!running)

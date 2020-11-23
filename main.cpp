@@ -6,6 +6,8 @@
 #include <queue>
 #include <cmath>
 #include <list>
+#include <set>
+#include <map>
 
 struct pInfo
 {
@@ -30,55 +32,40 @@ struct Process
 
 void fcfs(const std::vector<pInfo> &list)
 {
-	
-	std::vector<std::unique_ptr<Process>> blockedList;
-	std::deque<std::unique_ptr<Process>> readyQueue;
-	auto running = std::unique_ptr<Process>{};
+	std::vector<Process> processes;
+	std::priority_queue<std::pair<const size_t, Process *>> blockedList;
+	std::priority_queue<Process *> readyQueue;
+	Process *running = nullptr;
 	
 	for (int i = 0; i < 99; ++i)
 	{
-		for (pInfo p : list)
+		for (auto const &p : list)
 		{
 			if (p.arrival == i)
 			{
-				readyQueue.emplace_back(std::make_unique<Process>(p.id, p.cpuTime, p.ioTime));
+				processes.emplace_back(p.id, p.cpuTime, p.ioTime);
+				readyQueue.push(&processes.back());
 			}
 		}
 		
-		blockedList.erase(
-				std::remove_if(
-						blockedList.begin(),
-						blockedList.end(),
-						[](std::unique_ptr<Process> &p)
-						{
-							p->elapsedIO++;
-							readyQueue.push_back(std::move(p));
-							return p->elapsedIO == p->ioTime;
-						}
-				),
-				blockedList.end()
-		);
-		for (int j = 0; j < blockedList.size(); j++)
+		while (blockedList.top().first == i)
 		{
-			blockedList[j]->elapsedIO++;
-			if (blockedList[j]->elapsedIO == blockedList[j]->ioTime)
-			{
-				readyQueue.push_back(std::move(blockedList[j]));
-				blockedList.erase(blockedList[j]);
-			}
+			readyQueue.push(blockedList.top().second);
+			blockedList.pop();
 		}
 		
 		running->elapsedCpu++;
 		
 		if (running->elapsedCpu == running->ioStart)
 		{
-			blockedList.push_back(std::move(running));
+			blockedList.push({i + running->ioTime, running});
+			running = nullptr;
 		}
 		
 		if (!running)
 		{
-			running = std::move(readyQueue.front());
-			readyQueue.pop_front();
+			running = readyQueue.top();
+			readyQueue.pop();
 		}
 	}
 	

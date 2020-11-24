@@ -10,8 +10,6 @@
 #include <string>
 #include <sstream>
 
-#include "magic_enum.hpp"
-
 using PID = const size_t;
 struct Process
 {
@@ -57,10 +55,10 @@ void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, s
 	output << "\n";
 }
 
-void scheduler(std::vector<Process> &processes, std::ostream &out)
+void scheduler(std::vector<Process> &processes, size_t s, std::ostream &out)
 {
 	std::priority_queue<pTimePair, std::vector<pTimePair>, std::greater<>> blockedList;
-	std::priority_queue<Process *> readyQueue;
+	std::deque<Process *> readyQueue;
 	std::map<PID, size_t> finishedList;
 	Process *running = nullptr;
 	
@@ -72,10 +70,10 @@ void scheduler(std::vector<Process> &processes, std::ostream &out)
 	for (int curCycle = 0; finishedList.size() < processes.size(); ++curCycle)
 	{
 		
-		while (blockedList.top().first == curCycle)
+		while (!blockedList.empty() && blockedList.top().first == curCycle)
 		{
 			blockedList.top().second->state = Process::ready;
-			readyQueue.push(blockedList.top().second);
+			readyQueue.push_back(blockedList.top().second);
 			blockedList.pop();
 		}
 		
@@ -98,14 +96,12 @@ void scheduler(std::vector<Process> &processes, std::ostream &out)
 		
 		if (!running && !readyQueue.empty())
 		{
-			running = readyQueue.top();
-			readyQueue.pop();
+			running = readyQueue.front();
+			readyQueue.pop_front();
 			running->state = Process::running;
 		}
 		
 		TimingSnapshot(curCycle, processes, out);
-		
-		
 	}
 	
 	
@@ -133,7 +129,7 @@ int main(int argc, char *argv[])
 			pList.emplace_back(id, cpuTime, ioTime, arrival);
 		}
 		
-		scheduler(pList, std::cout);
+		scheduler(pList, 0, std::cout);
 	}
 	return 0;
 }

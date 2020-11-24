@@ -11,6 +11,7 @@
 #include <sstream>
 
 using PID = const size_t;
+
 struct Process
 {
 	PID id;
@@ -18,14 +19,15 @@ struct Process
 	const size_t ioStart = cpuTime / 2 + (cpuTime % 2 != 0);
 	size_t elapsedCpu = 0;
 	
-	enum State {
+	enum State
+	{
 		running, ready, blocked, notArrived, finished
 	} state{notArrived};
 	
 	Process(const PID id, const size_t cpuTime, const size_t ioTime, const size_t arrival) : id(id),
-	                                                                                            cpuTime(cpuTime),
-	                                                                                            ioTime(ioTime),
-	                                                                                            arrival(arrival)
+	                                                                                         cpuTime(cpuTime),
+	                                                                                         ioTime(ioTime),
+	                                                                                         arrival(arrival)
 	{}
 };
 
@@ -55,21 +57,32 @@ void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, s
 	output << "\n";
 }
 
-void scheduler(std::vector<Process> &processes, size_t s, std::ostream &out)
+class Scheduler
 {
+private:
+	std::vector<Process> &processes;
 	std::priority_queue<pTimePair, std::vector<pTimePair>, std::greater<>> blockedList;
 	std::deque<Process *> readyQueue;
 	std::map<PID, size_t> finishedList;
 	Process *running = nullptr;
-	
-	for (auto &&p: processes)
+	size_t curCycle = 0;
+
+public:
+	explicit Scheduler(std::vector<Process> &processes) : processes(processes)
 	{
-		blockedList.push({p.arrival, &p});
+		for (auto &&p: processes)
+		{
+			blockedList.push({p.arrival, &p});
+		}
 	}
 	
-	for (int curCycle = 0; finishedList.size() < processes.size(); ++curCycle)
+	size_t getCurCycle() const
 	{
-		
+		return curCycle;
+	}
+
+	void runCycle()
+	{
 		while (!blockedList.empty() && blockedList.top().first == curCycle)
 		{
 			blockedList.top().second->state = Process::ready;
@@ -101,13 +114,14 @@ void scheduler(std::vector<Process> &processes, size_t s, std::ostream &out)
 			running->state = Process::running;
 		}
 		
-		TimingSnapshot(curCycle, processes, out);
+		curCycle++;
 	}
 	
-	
-}
-
-
+	bool isRunning()
+	{
+		return finishedList.size() < processes.size();
+	}
+};
 
 
 int main(int argc, char *argv[])
@@ -129,7 +143,15 @@ int main(int argc, char *argv[])
 			pList.emplace_back(id, cpuTime, ioTime, arrival);
 		}
 		
-		scheduler(pList, 0, std::cout);
+		Scheduler scheduler(pList);
+		
+		scheduler.runCycle();
+		while (scheduler.isRunning())
+		{
+			TimingSnapshot(scheduler.getCurCycle(), pList, std::cout);
+			scheduler.runCycle();
+		}
+		
 	}
 	return 0;
 }

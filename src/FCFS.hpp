@@ -8,7 +8,7 @@ class FCFS : public Scheduler
 protected:
 	std::deque<Process *> readyQueue;
 	
-	void processSwitch() override;
+	void switchProcess() override;
 	
 	void readyProcess(Process *p) override;
 

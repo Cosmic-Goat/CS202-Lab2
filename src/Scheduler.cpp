@@ -7,7 +7,7 @@ Scheduler::Scheduler(std::vector<Process> &processes) : processes(processes)
 
 void Scheduler::runCycle()
 {
-	readyProcesses();
+	updateBlocked();
 	
 	if (running)
 	{
@@ -15,7 +15,7 @@ void Scheduler::runCycle()
 		updateRunningProcess();
 	}
 	
-	if (!running) processSwitch();
+	if (!running) switchProcess();
 	curCycle++;
 }
 
@@ -23,7 +23,7 @@ void Scheduler::updateRunningProcess()
 {
 	running->elapsedCpu++;
 	
-	if (running->elapsedCpu == running->ioStart)
+	if (running->elapsedCpu == running->ioStart())
 	{
 		blockProcess(running);
 	} else if (running->elapsedCpu == running->cpuTime)
@@ -46,7 +46,7 @@ void Scheduler::blockProcess(Process *&p)
 	p = nullptr;
 }
 
-void Scheduler::readyProcesses()
+void Scheduler::updateBlocked()
 {
 	while (!blockedList.empty() && blockedList.top().first == curCycle)
 	{

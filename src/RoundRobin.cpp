@@ -5,7 +5,7 @@ void RoundRobin::updateRunningProcess()
 	qRunTime++;
 	running->elapsedCpu++;
 	
-	if (running->elapsedCpu == running->ioStart)
+	if (running->elapsedCpu == running->ioStart())
 	{
 		blockProcess(running);
 	} else if (running->elapsedCpu == running->cpuTime)
@@ -18,7 +18,7 @@ void RoundRobin::updateRunningProcess()
 	}
 }
 
-void RoundRobin::processSwitch()
+void RoundRobin::switchProcess()
 {
 	if (!readyQueue.empty())
 	{

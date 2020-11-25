@@ -7,7 +7,7 @@ class SRJF : public Scheduler
 {
 	std::priority_queue<pTimePair, std::vector<pTimePair>, std::greater<>> readyQueue;
 	
-	void processSwitch() override;
+	void switchProcess() override;
 	
 	void readyProcess(Process *p) override;
 

@@ -6,7 +6,7 @@ void FCFS::readyProcess(Process *const p)
 	readyQueue.push_back(p);
 }
 
-void FCFS::processSwitch()
+void FCFS::switchProcess()
 {
 	if (!readyQueue.empty())
 	{

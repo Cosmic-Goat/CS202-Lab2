@@ -5,7 +5,7 @@
 #include "RoundRobin.hpp"
 #include "SRJF.hpp"
 
-static void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
+static void TimingSnapshot(const size_t cycle, std::vector<Process> &processes, std::ostream &output)
 {
 	constexpr std::string_view STATE_STRINGS[] = {"running", "ready", "blocked"};
 	output << cycle << " ";
@@ -23,7 +23,7 @@ static void run(std::vector<Process> &processes, std::ostream &output)
 	scheduler.runCycle();
 	while (scheduler.isRunning())
 	{
-		TimingSnapshot(scheduler.getCurCycle(), output, processes);
+		TimingSnapshot(scheduler.getCurCycle(), processes, output);
 		scheduler.runCycle();
 	}
 	
@@ -39,16 +39,14 @@ static void run(std::vector<Process> &processes, std::ostream &output)
 }
 
 template<typename... Ts>
-constexpr void runScheduler(int i, Ts&... args)
+constexpr void runScheduler(int algorithm, Ts &... args)
 {
-	constexpr void (*arr[3])(std::vector<Process> &, std::ostream &) = {run<FCFS>, run<RoundRobin>, run<SRJF>};
-	arr[i](args...);
+	constexpr void (*algoList[])(std::vector<Process> &, std::ostream &) = {run<FCFS>, run<RoundRobin>, run<SRJF>};
+	algoList[algorithm](args...);
 }
 
 int main(int argc, char *argv[])
 {
-	std::vector<Process> processes;
-	
 	std::string file(argv[1]);
 	std::ifstream input(file);
 	std::ofstream output;
@@ -60,14 +58,8 @@ int main(int argc, char *argv[])
 		size_t num;
 		input >> num;
 		
-		processes.reserve(num);
-		
-		for (int i = 0; i < num; ++i)
-		{
-			size_t id, cpuTime, ioTime, arrival;
-			input >> id >> cpuTime >> ioTime >> arrival;
-			processes.emplace_back(id, cpuTime, ioTime, arrival);
-		}
+		std::vector<Process> processes(num);
+		for (auto &p : processes) input >> p.id >> p.cpuTime >> p.ioTime >> p.arrival;
 		
 		runScheduler(std::stoi(argv[2]), processes, output);
 		

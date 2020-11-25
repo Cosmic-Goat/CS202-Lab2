@@ -5,25 +5,18 @@
 #include <queue>
 #include <map>
 
-using PID = const size_t;
-
 struct Process
 {
-	PID id;
-	const size_t cpuTime, ioTime, arrival;
-	const size_t ioStart = cpuTime / 2 + (cpuTime % 2 != 0);
+	size_t id{}, cpuTime{}, ioTime{}, arrival{};
 	size_t elapsedCpu = 0;
+	
+	constexpr size_t ioStart() const
+	{ return cpuTime / 2 + (cpuTime % 2 != 0); }
 	
 	enum State
 	{
 		Running, Ready, Blocked, Inactive
 	} state{Inactive};
-	
-	Process(const PID id, const size_t cpuTime, const size_t ioTime, const size_t arrival) : id(id),
-	                                                                                         cpuTime(cpuTime),
-	                                                                                         ioTime(ioTime),
-	                                                                                         arrival(arrival)
-	{}
 };
 
 class Scheduler
@@ -35,13 +28,13 @@ protected:
 	Process *running = nullptr;
 	size_t curCycle = 0;
 	
-	virtual void processSwitch() = 0;
+	void updateBlocked();
 	
 	virtual void updateRunningProcess();
 	
-	void readyProcesses();
-	
 	virtual void readyProcess(Process *p) = 0;
+	
+	virtual void switchProcess() = 0;
 	
 	void blockProcess(Process *&p);
 	
@@ -49,7 +42,7 @@ protected:
 
 public:
 	size_t activeCycles = 0;
-	std::map<PID, const size_t> finishedList;
+	std::map<const size_t, const size_t> finishedList;
 	
 	explicit Scheduler(std::vector<Process> &processes);
 	

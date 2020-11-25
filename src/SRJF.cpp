@@ -19,7 +19,7 @@ void SRJF::readyProcess(Process *const p)
 	readyQueue.emplace(p->cpuTime - p->elapsedCpu, p);
 }
 
-void SRJF::processSwitch()
+void SRJF::switchProcess()
 {
 	if (!readyQueue.empty())
 	{

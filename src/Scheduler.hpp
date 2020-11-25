@@ -1,6 +1,8 @@
 #ifndef LAB_2_SCHEDULER_HPP
 #define LAB_2_SCHEDULER_HPP
 
+#include <queue>
+#include <map>
 #include "Process.hpp"
 
 class Scheduler
@@ -16,7 +18,7 @@ protected:
 	
 	virtual void processSwitch() = 0;
 	
-	virtual void updateRunningProcess() = 0;
+	virtual void updateRunningProcess();
 
 public:
 	size_t activeCycles = 0;
@@ -32,6 +34,9 @@ public:
 	inline bool isRunning() const
 	{ return finishedList.size() < processes.size(); }
 	
+	void blockProcess(Process *&p);
+	
+	void terminateProcess(Process *&p);
 };
 
 #endif //LAB_2_SCHEDULER_HPP

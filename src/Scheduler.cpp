@@ -27,3 +27,33 @@ void Scheduler::runCycle()
 	curCycle++;
 }
 
+void Scheduler::updateRunningProcess()
+{
+	running->elapsedCpu++;
+	
+	if (running->elapsedCpu == running->ioStart)
+	{
+		blockProcess(running);
+		return;
+	}
+	
+	if (running->elapsedCpu == running->cpuTime)
+	{
+		terminateProcess(running);
+		return;
+	}
+}
+
+void Scheduler::terminateProcess(Process *&p)
+{
+	p->state = Process::inactive;
+	finishedList.emplace(p->id, curCycle - p->arrival);
+	p = nullptr;
+}
+
+void Scheduler::blockProcess(Process *&p)
+{
+	p->state = Process::blocked;
+	blockedList.push({curCycle + p->ioTime, p});
+	p = nullptr;
+}

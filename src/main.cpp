@@ -11,6 +11,7 @@
 #include "Process.hpp"
 #include "Scheduler.hpp"
 #include "FCFS.hpp"
+#include "RoundRobin.hpp"
 
 void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
 {
@@ -45,10 +46,10 @@ void run(std::ostream &output, std::vector<Process> &processes)
 		TimingSnapshot(scheduler.getCurCycle(), output, processes);
 		scheduler.runCycle();
 	}
-
+	
 	output << "\nFinishing time: " << scheduler.getCurCycle() - 1;
 	output << "\nCPU utilization: " << static_cast<float>(scheduler.activeCycles) / scheduler.getCurCycle();
-
+	
 	for (auto &&p : scheduler.finishedList)
 	{
 		output << "\nTurnaround process " << p.first << ": " << p.second;
@@ -77,9 +78,9 @@ int main(int argc, char *argv[])
 		
 		switch (std::stoi(argv[2]))
 		{
-			case 0:
-				run<FCFS>(output, processes);
-				break;
+			case 0: run<FCFS>(output, processes); break;
+			case 1: run<RoundRobin>(output, processes); break;
+			case 2: run<RoundRobin>(output, processes); break;
 		}
 	}
 	return 0;

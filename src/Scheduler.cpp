@@ -3,10 +3,7 @@
 
 Scheduler::Scheduler(std::vector<Process> &processes) : processes(processes)
 {
-	for (auto &&p: processes)
-	{
-		blockedList.push({p.arrival, &p});
-	}
+	for (auto &&p: processes) blockedList.push({p.arrival, &p});
 }
 
 void Scheduler::runCycle()

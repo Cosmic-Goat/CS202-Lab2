@@ -8,10 +8,12 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <iomanip>
 #include "Process.hpp"
 #include "Scheduler.hpp"
 #include "FCFS.hpp"
 #include "RoundRobin.hpp"
+#include "SRJF.hpp"
 
 void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
 {
@@ -58,9 +60,11 @@ void run(std::ostream &output, std::vector<Process> &processes)
 
 int main(int argc, char *argv[])
 {
+	std::vector<Process> processes;
 	std::ifstream input(argv[1]);
 	std::ostream &output = std::cout;
-	std::vector<Process> processes;
+	output << std::fixed;
+	output << std::setprecision(2);
 	
 	if (input.is_open())
 	{
@@ -78,9 +82,15 @@ int main(int argc, char *argv[])
 		
 		switch (std::stoi(argv[2]))
 		{
-			case 0: run<FCFS>(output, processes); break;
-			case 1: run<RoundRobin>(output, processes); break;
-			case 2: run<>(output, processes); break;
+			case 0:
+				run<FCFS>(output, processes);
+				break;
+			case 1:
+				run<RoundRobin>(output, processes);
+				break;
+			case 2:
+				run<SRJF>(output, processes);
+				break;
 		}
 	}
 	return 0;

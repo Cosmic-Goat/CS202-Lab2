@@ -1,12 +1,13 @@
 #include <fstream>
 #include <iomanip>
+#include <functional>
 #include "Scheduler.hpp"
 #include "FCFS.hpp"
 #include "RoundRobin.hpp"
 #include "SRJF.hpp"
 
 
-void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
+static void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
 {
 	constexpr std::string_view STATE_STRINGS[] = {"running", "ready", "blocked"};
 	output << cycle << " ";
@@ -67,20 +68,12 @@ int main(int argc, char *argv[])
 		
 		input.close();
 		
-		constexpr auto a = &run<FCFS>; //, &run<RoundRobin>};
 		
-		switch (std::stoi(argv[2]))
-		{
-			case 0:
-				run<FCFS>(output, processes);
-				break;
-			case 1:
-				run<RoundRobin>(output, processes);
-				break;
-			case 2:
-				run<SRJF>(output, processes);
-				break;
-		}
+		constexpr void (*runner[3])(std::ostream&, std::vector<Process>&) = {run<FCFS>, run<RoundRobin>, run<SRJF>};
+		runner[std::stoi(argv[2])](output, processes);
+		
+		
+		
 		
 		output.close();
 	}

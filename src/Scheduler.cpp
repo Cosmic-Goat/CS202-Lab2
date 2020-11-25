@@ -34,14 +34,14 @@ void Scheduler::updateRunningProcess()
 
 void Scheduler::terminateProcess(Process *&p)
 {
-	p->state = Process::inactive;
+	p->state = Process::Inactive;
 	finishedList.emplace(p->id, curCycle - p->arrival);
 	p = nullptr;
 }
 
 void Scheduler::blockProcess(Process *&p)
 {
-	p->state = Process::blocked;
+	p->state = Process::Blocked;
 	blockedList.push({curCycle + p->ioTime, p});
 	p = nullptr;
 }

@@ -1,35 +1,24 @@
-#include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include "Scheduler.hpp"
 #include "FCFS.hpp"
 #include "RoundRobin.hpp"
 #include "SRJF.hpp"
 
+
 void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
 {
+	constexpr std::string_view STATE_STRINGS[] = {"running", "ready", "blocked"};
 	output << cycle << " ";
 	for (auto &&p : processes)
 	{
-		switch (p.state)
-		{
-			case Process::running:
-				output << p.id << ":running ";
-				break;
-			case Process::ready:
-				output << p.id << ":ready ";
-				break;
-			case Process::blocked:
-				output << p.id << ":blocked ";
-				break;
-			case Process::inactive:
-				break;
-		}
+		if (p.state != Process::Inactive) output << p.id << ":" << STATE_STRINGS[p.state] << " ";
 	}
 	output << "\n";
 }
 
 template<typename T>
-void run(std::ostream &output, std::vector<Process> &processes)
+static void run(std::ostream &output, std::vector<Process> &processes)
 {
 	T scheduler(processes);
 	scheduler.runCycle();
@@ -46,21 +35,23 @@ void run(std::ostream &output, std::vector<Process> &processes)
 	{
 		output << "\nTurnaround process " << p.first << ": " << p.second;
 	}
+	
+	output << std::endl;
 }
 
 int main(int argc, char *argv[])
 {
 	std::vector<Process> processes;
 	
-	std::filesystem::path p(argv[1]);
+	std::string file(argv[1]);
 	
-	std::ifstream input(p);
+	std::ifstream input(file);
 	std::ofstream output;
-	output.open(p.stem().string() + "------" + std::string(argv[2]) + ".txt");
+	output.open(file.erase(file.length() - 4) + "-" + std::string(argv[2]) + ".txt");
 	output << std::fixed;
 	output << std::setprecision(2);
 	
-	if (input.is_open())
+	if (input.is_open() && output.is_open())
 	{
 		size_t num;
 		input >> num;
@@ -74,6 +65,10 @@ int main(int argc, char *argv[])
 			processes.emplace_back(id, cpuTime, ioTime, arrival);
 		}
 		
+		input.close();
+		
+		constexpr auto a = &run<FCFS>; //, &run<RoundRobin>};
+		
 		switch (std::stoi(argv[2]))
 		{
 			case 0:
@@ -86,6 +81,7 @@ int main(int argc, char *argv[])
 				run<SRJF>(output, processes);
 				break;
 		}
+		
+		output.close();
 	}
-	return 0;
 }

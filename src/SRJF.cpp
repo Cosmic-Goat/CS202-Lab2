@@ -15,7 +15,7 @@ void SRJF::updateRunningProcess()
 
 void SRJF::readyProcess(Process *const p)
 {
-	p->state = Process::ready;
+	p->state = Process::Ready;
 	readyQueue.emplace(p->cpuTime - p->elapsedCpu, p);
 }
 
@@ -25,6 +25,6 @@ void SRJF::processSwitch()
 	{
 		running = readyQueue.top().second;
 		readyQueue.pop();
-		running->state = Process::running;
+		running->state = Process::Running;
 	}
 }

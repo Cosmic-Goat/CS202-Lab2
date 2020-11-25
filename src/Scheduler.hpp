@@ -16,8 +16,8 @@ struct Process
 	
 	enum State
 	{
-		running, ready, blocked, inactive
-	} state{inactive};
+		Running, Ready, Blocked, Inactive
+	} state{Inactive};
 	
 	Process(const PID id, const size_t cpuTime, const size_t ioTime, const size_t arrival) : id(id),
 	                                                                                         cpuTime(cpuTime),

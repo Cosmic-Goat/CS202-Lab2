@@ -2,7 +2,7 @@
 
 void FCFS::readyProcess(Process *const p)
 {
-	p->state = Process::ready;
+	p->state = Process::Ready;
 	readyQueue.push_back(p);
 }
 
@@ -12,7 +12,7 @@ void FCFS::processSwitch()
 	{
 		running = readyQueue[0];
 		readyQueue.pop_front();
-		running->state = Process::running;
+		running->state = Process::Running;
 	}
 }
 

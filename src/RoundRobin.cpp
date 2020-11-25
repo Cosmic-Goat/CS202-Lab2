@@ -24,7 +24,7 @@ void RoundRobin::processSwitch()
 	{
 		running = readyQueue[0];
 		readyQueue.pop_front();
-		running->state = Process::running;
+		running->state = Process::Running;
 		qRunTime = 0;
 	}
 }

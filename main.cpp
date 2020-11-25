@@ -31,7 +31,6 @@ struct Process
 	{}
 };
 
-
 void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, std::ostream &output)
 {
 	output << cycle << " ";
@@ -65,7 +64,40 @@ private:
 	Process *running = nullptr;
 	
 	size_t curCycle = 0;
-
+	void readyProcesses()
+	{
+		while (!blockedList.empty() && blockedList.top().first == curCycle)
+		{
+			blockedList.top().second->state = Process::ready;
+			readyQueue.push_back(blockedList.top().second);
+			blockedList.pop();
+		}
+	}
+	
+	void processSwitch()
+	{
+		running = readyQueue[0];
+		readyQueue.pop_front();
+		running->state = Process::running;
+	}
+	
+	void updateRunningProcess()
+	{
+		running->elapsedCpu++;
+		
+		if (running->elapsedCpu == running->ioStart)
+		{
+			running->state = Process::blocked;
+			blockedList.push({curCycle + running->ioTime, running});
+			running = nullptr;
+		} else if (running->elapsedCpu == running->cpuTime)
+		{
+			running->state = Process::inactive;
+			finishedList.emplace(running->id, curCycle - running->arrival);
+			running = nullptr;
+		}
+	}
+	
 public:
 	size_t activeCycles = 0;
 	std::map<PID, const size_t> finishedList;
@@ -78,45 +110,23 @@ public:
 		}
 	}
 	
-	size_t getCurCycle() const
-	{
-		return curCycle - 1;
-	}
+	inline size_t getCurCycle() const {return curCycle - 1;}
 	
 	void runCycle()
 	{
-		while (!blockedList.empty() && blockedList.top().first == curCycle)
-		{
-			blockedList.top().second->state = Process::ready;
-			readyQueue.push_back(blockedList.top().second);
-			blockedList.pop();
-		}
+		readyProcesses();
 		
 		if (running)
 		{
-			running->elapsedCpu++;
-			
-			if (running->elapsedCpu == running->ioStart)
-			{
-				running->state = Process::blocked;
-				blockedList.push({curCycle + running->ioTime, running});
-				running = nullptr;
-			} else if (running->elapsedCpu == running->cpuTime)
-			{
-				running->state = Process::inactive;
-				finishedList.emplace(running->id, curCycle - running->arrival);
-				running = nullptr;
-			}
+			activeCycles++;
+			updateRunningProcess();
 		}
 		
 		if (!running && !readyQueue.empty())
 		{
-			running = readyQueue.front();
-			readyQueue.pop_front();
-			running->state = Process::running;
+			processSwitch();
 		}
 		
-		if (running) activeCycles++;
 		curCycle++;
 	}
 	

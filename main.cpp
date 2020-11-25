@@ -21,8 +21,8 @@ struct Process
 	
 	enum State
 	{
-		running, ready, blocked, notArrived, finished
-	} state{notArrived};
+		running, ready, blocked, inactive
+	} state{inactive};
 	
 	Process(const PID id, const size_t cpuTime, const size_t ioTime, const size_t arrival) : id(id),
 	                                                                                         cpuTime(cpuTime),
@@ -31,7 +31,6 @@ struct Process
 	{}
 };
 
-using pTimePair = std::pair<size_t, Process *>;
 
 void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, std::ostream &output)
 {
@@ -49,8 +48,7 @@ void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, s
 			case Process::blocked:
 				output << p.id << ":blocked ";
 				break;
-			case Process::notArrived:
-			case Process::finished:
+			case Process::inactive:
 				break;
 		}
 	}
@@ -59,15 +57,19 @@ void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, s
 
 class Scheduler
 {
+	using pTimePair = std::pair<size_t, Process *>;
 private:
 	std::vector<Process> &processes;
 	std::priority_queue<pTimePair, std::vector<pTimePair>, std::greater<>> blockedList;
 	std::deque<Process *> readyQueue;
-	std::map<PID, size_t> finishedList;
 	Process *running = nullptr;
+	
 	size_t curCycle = 0;
 
 public:
+	size_t activeCycles = 0;
+	std::map<PID, const size_t> finishedList;
+	
 	explicit Scheduler(std::vector<Process> &processes) : processes(processes)
 	{
 		for (auto &&p: processes)
@@ -78,9 +80,9 @@ public:
 	
 	size_t getCurCycle() const
 	{
-		return curCycle;
+		return curCycle - 1;
 	}
-
+	
 	void runCycle()
 	{
 		while (!blockedList.empty() && blockedList.top().first == curCycle)
@@ -101,8 +103,8 @@ public:
 				running = nullptr;
 			} else if (running->elapsedCpu == running->cpuTime)
 			{
-				running->state = Process::finished;
-				finishedList.emplace(running->id, curCycle);
+				running->state = Process::inactive;
+				finishedList.emplace(running->id, curCycle - running->arrival);
 				running = nullptr;
 			}
 		}
@@ -114,6 +116,7 @@ public:
 			running->state = Process::running;
 		}
 		
+		if (running) activeCycles++;
 		curCycle++;
 	}
 	
@@ -127,6 +130,7 @@ public:
 int main(int argc, char *argv[])
 {
 	std::ifstream input(argv[1]);
+	std::ostream &output = std::cout;
 	
 	if (input.is_open())
 	{
@@ -148,10 +152,17 @@ int main(int argc, char *argv[])
 		scheduler.runCycle();
 		while (scheduler.isRunning())
 		{
-			TimingSnapshot(scheduler.getCurCycle(), pList, std::cout);
+			TimingSnapshot(scheduler.getCurCycle(), pList, output);
 			scheduler.runCycle();
 		}
 		
+		output << "\nFinishing time: " << scheduler.getCurCycle() - 1;
+		output << "\nCPU utilization: " << static_cast<float>(scheduler.activeCycles) / scheduler.getCurCycle();
+		
+		for (auto &&p : scheduler.finishedList)
+		{
+			output << "\nTurnaround process " << p.first << ": " << p.second;
+		}
 	}
 	return 0;
 }

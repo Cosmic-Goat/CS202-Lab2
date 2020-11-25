@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <queue>
-#include <cmath>
 #include <map>
 #include "FCFS.hpp"
 
@@ -44,3 +43,6 @@ void FCFS::updateRunningProcess()
 		running = nullptr;
 	}
 }
+
+FCFS::FCFS(std::vector<Process> &processes) : Scheduler(processes)
+{}

@@ -1,0 +1,7 @@
+CS202 Operating Systems
+Lab 2
+Shrey Pasricha
+sp5632
+
+I have inclueded a makefile for correct compilation of my scheduler program. Simply run 'make' to compile it.
+The main source file is src/main.cpp, and all scheduling algorithm logic is placed in their respective .cpp class files.

@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
 #include "Process.hpp"
 #include "Scheduler.hpp"
 #include "FCFS.hpp"
@@ -61,8 +62,12 @@ void run(std::ostream &output, std::vector<Process> &processes)
 int main(int argc, char *argv[])
 {
 	std::vector<Process> processes;
-	std::ifstream input(argv[1]);
-	std::ostream &output = std::cout;
+	
+	std::filesystem::path p(argv[1]);
+	
+	std::ifstream input(p);
+	std::ofstream output;
+	output.open(p.stem().string() + "------" + std::string(argv[2]) + ".txt");
 	output << std::fixed;
 	output << std::setprecision(2);
 	

@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 		{
 			case 0: run<FCFS>(output, processes); break;
 			case 1: run<RoundRobin>(output, processes); break;
-			case 2: run<RoundRobin>(output, processes); break;
+			case 2: run<>(output, processes); break;
 		}
 	}
 	return 0;

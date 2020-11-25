@@ -1,14 +1,17 @@
-//
-// Created by Shrey on 24/11/2020.
-//
-
 #include "RoundRobin.hpp"
 
 void RoundRobin::updateRunningProcess()
 {
-	FCFS::updateRunningProcess();
+	qRunTime++;
+	running->elapsedCpu++;
 	
-	if (qRunTime == 2)
+	if (running->elapsedCpu == running->ioStart)
+	{
+		blockProcess(running);
+	} else if (running->elapsedCpu == running->cpuTime)
+	{
+		terminateProcess(running);
+	} else if (qRunTime == 2)
 	{
 		readyProcess(running);
 		running = nullptr;
@@ -22,6 +25,7 @@ void RoundRobin::processSwitch()
 		running = readyQueue[0];
 		readyQueue.pop_front();
 		running->state = Process::running;
+		qRunTime = 0;
 	}
 }
 

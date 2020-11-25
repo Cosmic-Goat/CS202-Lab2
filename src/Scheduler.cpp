@@ -1,9 +1,5 @@
-#include <string>
-#include <map>
-#include <cmath>
-#include <queue>
+#include "FCFS.hpp"
 #include <vector>
-#include "Scheduler.hpp"
 
 Scheduler::Scheduler(std::vector<Process> &processes) : processes(processes)
 {
@@ -34,13 +30,9 @@ void Scheduler::updateRunningProcess()
 	if (running->elapsedCpu == running->ioStart)
 	{
 		blockProcess(running);
-		return;
-	}
-	
-	if (running->elapsedCpu == running->cpuTime)
+	} else if (running->elapsedCpu == running->cpuTime)
 	{
 		terminateProcess(running);
-		return;
 	}
 }
 
@@ -56,4 +48,13 @@ void Scheduler::blockProcess(Process *&p)
 	p->state = Process::blocked;
 	blockedList.push({curCycle + p->ioTime, p});
 	p = nullptr;
+}
+
+void Scheduler::readyProcesses()
+{
+	while (!blockedList.empty() && blockedList.top().first == curCycle)
+	{
+		readyProcess(blockedList.top().second);
+		blockedList.pop();
+	}
 }

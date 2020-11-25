@@ -3,6 +3,8 @@
 
 #include <queue>
 #include <map>
+#include <deque>
+#include <vector>
 #include "Process.hpp"
 
 class Scheduler
@@ -14,11 +16,17 @@ protected:
 	Process *running = nullptr;
 	size_t curCycle = 0;
 	
-	virtual void readyProcesses() = 0;
-	
 	virtual void processSwitch() = 0;
 	
 	virtual void updateRunningProcess();
+	
+	void readyProcesses();
+	
+	virtual void readyProcess(Process *p) = 0;
+	
+	void blockProcess(Process *&p);
+	
+	void terminateProcess(Process *&p);
 
 public:
 	size_t activeCycles = 0;
@@ -34,9 +42,7 @@ public:
 	inline bool isRunning() const
 	{ return finishedList.size() < processes.size(); }
 	
-	void blockProcess(Process *&p);
 	
-	void terminateProcess(Process *&p);
 };
 
 #endif //LAB_2_SCHEDULER_HPP

@@ -1,11 +1,9 @@
 #include <fstream>
 #include <iomanip>
-#include <functional>
 #include "Scheduler.hpp"
 #include "FCFS.hpp"
 #include "RoundRobin.hpp"
 #include "SRJF.hpp"
-
 
 static void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector<Process> &processes)
 {
@@ -19,7 +17,7 @@ static void TimingSnapshot(const size_t cycle, std::ostream &output, std::vector
 }
 
 template<typename T>
-static void run(std::ostream &output, std::vector<Process> &processes)
+static void run(std::vector<Process> &processes, std::ostream &output)
 {
 	T scheduler(processes);
 	scheduler.runCycle();
@@ -40,17 +38,22 @@ static void run(std::ostream &output, std::vector<Process> &processes)
 	output << std::endl;
 }
 
+template<typename... Ts>
+constexpr void runScheduler(int i, Ts&... args)
+{
+	constexpr void (*arr[3])(std::vector<Process> &, std::ostream &) = {run<FCFS>, run<RoundRobin>, run<SRJF>};
+	arr[i](args...);
+}
+
 int main(int argc, char *argv[])
 {
 	std::vector<Process> processes;
 	
 	std::string file(argv[1]);
-	
 	std::ifstream input(file);
 	std::ofstream output;
 	output.open(file.erase(file.length() - 4) + "-" + std::string(argv[2]) + ".txt");
-	output << std::fixed;
-	output << std::setprecision(2);
+	output << std::fixed << std::setprecision(2);
 	
 	if (input.is_open() && output.is_open())
 	{
@@ -66,15 +69,9 @@ int main(int argc, char *argv[])
 			processes.emplace_back(id, cpuTime, ioTime, arrival);
 		}
 		
+		runScheduler(std::stoi(argv[2]), processes, output);
+		
 		input.close();
-		
-		
-		constexpr void (*runner[3])(std::ostream&, std::vector<Process>&) = {run<FCFS>, run<RoundRobin>, run<SRJF>};
-		runner[std::stoi(argv[2])](output, processes);
-		
-		
-		
-		
 		output.close();
 	}
 }

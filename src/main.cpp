@@ -33,6 +33,10 @@ void TimingSnapshot(const size_t cycle, const std::vector<Process> &processes, s
 	output << "\n";
 }
 
+void runCycle()
+{
+
+}
 
 int main(int argc, char *argv[])
 {
@@ -53,8 +57,15 @@ int main(int argc, char *argv[])
 			input >> id >> cpuTime >> ioTime >> arrival;
 			pList.emplace_back(id, cpuTime, ioTime, arrival);
 		}
+
+		std::unique_ptr<Scheduler> scheduler;
 		
-		Scheduler scheduler(pList);
+		switch (std::stoi(argv[2]))
+		{
+			case 0:
+				scheduler()
+		}
+		
 		
 		scheduler.runCycle();
 		while (scheduler.isRunning())

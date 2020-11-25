@@ -1,8 +1,6 @@
 #ifndef LAB_2_FCFS_HPP
 #define LAB_2_FCFS_HPP
 
-#include <deque>
-#include <vector>
 #include "Scheduler.hpp"
 
 class FCFS : public Scheduler

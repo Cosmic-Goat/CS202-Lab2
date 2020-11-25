@@ -1,5 +1,4 @@
-#include "FCFS.hpp"
-#include <vector>
+#include "Scheduler.hpp"
 
 Scheduler::Scheduler(std::vector<Process> &processes) : processes(processes)
 {

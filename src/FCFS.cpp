@@ -8,12 +8,9 @@ void FCFS::readyProcess(Process *const p)
 
 void FCFS::switchProcess()
 {
-	if (!readyQueue.empty())
-	{
-		running = readyQueue[0];
-		readyQueue.pop_front();
-		running->state = Process::Running;
-	}
+	running = readyQueue[0];
+	readyQueue.pop_front();
+	running->state = Process::Running;
 }
 
 FCFS::FCFS(std::vector<Process> &processes) : Scheduler(processes)

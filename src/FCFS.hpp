@@ -7,11 +7,16 @@ class FCFS : public Scheduler
 {
 protected:
 	std::deque<Process *> readyQueue;
-	
+
 	void switchProcess() override;
 	
 	void readyProcess(Process *p) override;
-
+	
+	bool hasReadyProcess() override {
+		return !readyQueue.empty();
+	}
+	
+	
 public:
 	explicit FCFS(std::vector<Process> &processes);
 };

@@ -21,10 +21,7 @@ void SRJF::readyProcess(Process *const p)
 
 void SRJF::switchProcess()
 {
-	if (!readyQueue.empty())
-	{
 		running = readyQueue.top().second;
 		readyQueue.pop();
 		running->state = Process::Running;
-	}
 }

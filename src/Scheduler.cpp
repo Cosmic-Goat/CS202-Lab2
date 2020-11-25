@@ -15,7 +15,7 @@ void Scheduler::runCycle()
 		updateRunningProcess();
 	}
 	
-	if (!running) switchProcess();
+	if (!running && hasReadyProcess()) switchProcess();
 	curCycle++;
 }
 

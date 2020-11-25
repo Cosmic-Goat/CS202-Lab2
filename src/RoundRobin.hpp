@@ -14,7 +14,7 @@ protected:
 public:
 	explicit RoundRobin(std::vector<Process> &processes);
 	
-	void switchProcess();
+	void switchProcess() override;
 };
 
 #endif //LAB_2_ROUNDROBIN_HPP

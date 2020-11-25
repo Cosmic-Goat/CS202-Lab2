@@ -39,6 +39,8 @@ protected:
 	void blockProcess(Process *&p);
 	
 	void terminateProcess(Process *&p);
+	
+	virtual constexpr bool hasReadyProcess() = 0;
 
 public:
 	size_t activeCycles = 0;
@@ -48,13 +50,11 @@ public:
 	
 	void runCycle();
 	
-	inline size_t getCurCycle() const
+	constexpr size_t getCurCycle() const
 	{ return curCycle - 1; }
 	
 	inline bool isRunning() const
 	{ return finishedList.size() < processes.size(); }
-	
-	
 };
 
 #endif //LAB_2_SCHEDULER_HPP

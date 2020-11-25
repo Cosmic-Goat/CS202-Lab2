@@ -1,17 +1,18 @@
-CC := gcc
-CXX := g++
-CXXFLAGS := -Wall -Og -std=c++20
+CXX = g++-9.1
+CPPFLAGS = -Wall -std=c++2a
+LD_FLAGS = -static-libstdc++
+
+SOURCEDIR = src
+SOURCES = $(wildcard $(SOURCEDIR)/*.cpp)
+OBJECTS = $(SOURCES:.cpp=.o)
+EXE = scheduling
 
 .phony: all clean
 
-all: scheduling
+all: $(SOURCES) $(EXE)
 
-scheduling: main.o
-	$(CXX) $(CXXFLAGS) -o $@ $+
-
-main.o: src/main.cpp src/Scheduler.hpp src/RoundRobin.hpp src/SRJF.hpp src/FCFS.hpp
-	$(CCX) $(CXXFLAGS) -c -o $@ $<
-
+$(EXE): $(OBJECTS)
+		$(CXX) $(LD_FLAGS) $(OBJECTS) -o $@
 
 clean:
-	rm scheduling
+		rm -f *.o $(OBJECTS)
